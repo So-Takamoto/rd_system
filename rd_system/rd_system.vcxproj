@@ -113,10 +113,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="rd_sim.cpp" />
+    <ClInclude Include="rd_simulator.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="rd_simulator.h" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
