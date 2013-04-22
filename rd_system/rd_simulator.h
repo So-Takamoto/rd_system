@@ -8,7 +8,7 @@ private:
 	float **u, **u_next;
 	float **v, **v_next;
 public:
-	rdmap(int _mapsize) : mapsize(_mapsize), f(0.029), k(0.056), ru(0.09), rv(0.056){
+	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03f), k(0.056f), ru(0.09f), rv(0.056f){
 		u = static_cast<float**>(malloc(sizeof(float*)*mapsize));
 		v = static_cast<float**>(malloc(sizeof(float*)*mapsize));
 		u[0] = static_cast<float*>(malloc(sizeof(float)*mapsize*mapsize));
@@ -79,8 +79,8 @@ public:
 	void move(){
 		for(int i = 1; i < mapsize-1; i++){
 			for(int j = 1; j < mapsize-1; j++){
-				u_next[i][j] = static_cast<float>(u[i][j] + 2.0 * (ru * ((u[i][j-1] - 2*u[i][j] + u[i][j+1]) + (u[i-1][j] - 2*u[i][j] + u[i+1][j])) - u[i][j]*v[i][j]*v[i][j] + f*(1-u[i][j])));
-				v_next[i][j] = static_cast<float>(v[i][j] + 2.0 * (rv * ((v[i][j-1] - 2*v[i][j] + v[i][j+1]) + (v[i-1][j] - 2*v[i][j] + v[i+1][j])) + u[i][j]*v[i][j]*v[i][j] - (f+k)*v[i][j]));
+				u_next[i][j] = static_cast<float>(u[i][j] + 1.0 * (ru * ((u[i][j-1] - 2*u[i][j] + u[i][j+1]) + (u[i-1][j] - 2*u[i][j] + u[i+1][j])) - u[i][j]*v[i][j]*v[i][j] + f*(1-u[i][j])));
+				v_next[i][j] = static_cast<float>(v[i][j] + 1.0 * (rv * ((v[i][j-1] - 2*v[i][j] + v[i][j+1]) + (v[i-1][j] - 2*v[i][j] + v[i+1][j])) + u[i][j]*v[i][j]*v[i][j] - (f+k)*v[i][j]));
 			}
 		}
 

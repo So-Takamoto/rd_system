@@ -1,7 +1,10 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <cmath>
+#include <iomanip>
 #include "freeglut.h"
+#include "bitmapUtil.h"
 using std::vector;
 #pragma comment( lib, "freeglut.lib" )
 
@@ -10,14 +13,22 @@ using std::vector;
 const int Mapsize = 200;
 const int Windowsize = 600;
 rdmap rd(Mapsize);
+static float *tex;
+static int tickCount = 0;
+char windowPixels[3*Windowsize*Windowsize];
 
 void timertick(int value)
 {
-	for(int i = 0; i < 20; i++){
+	for(int i = 0; i < 30; i++){
 		rd.move();
 	}
     glutPostRedisplay();
     glutTimerFunc(16, timertick, 0);
+	std::stringstream ss;
+	//glReadPixels(0, 0, Windowsize, Windowsize, GL_BGR_EXT, GL_UNSIGNED_BYTE, windowPixels);
+	//ss << "bmp/case2/case_" << std::setw(10) << std::setfill('0') << tickCount << ".bmp";
+	//saveBMP(ss.str(), Mapsize, Mapsize, windowPixels);
+	tickCount++;
 }
 
 void mousedrug(int x, int y){
@@ -88,8 +99,23 @@ void display(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	float** rd_v = rd.get_v();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, Mapsize, Mapsize, 0, GL_RED, GL_FLOAT, *rd_v);
+	float* rd_v = *(rd.get_v());
+	float* tex_current = tex;
+	float* rd_v_current = rd_v;
+	const float texture_mul = 2.0;
+	for(int i = 0; i < Mapsize; i++){
+		for(int j = 0; j < Mapsize; j++){
+			*tex_current = 0.0;
+			tex_current++;
+			*tex_current = std::min(texture_mul*(*rd_v_current), 1.0f);
+			tex_current++;
+			*tex_current = std::min(texture_mul*(*rd_v_current), 1.0f);
+			tex_current++;
+			rd_v_current++;
+		}
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Mapsize, Mapsize, 0, GL_RGB, GL_FLOAT, tex);
 
 	glColor3f(1.0,1.0,1.0);
 	glBegin(GL_POLYGON);
@@ -104,6 +130,7 @@ void display(void)
 	glutSwapBuffers();
 }
 int main(int argc, char** argv){
+	tex = static_cast<float*>(malloc(Mapsize*Mapsize*3*sizeof(float)));
 
     glutInitWindowPosition(100, 100);
 	glutInitWindowSize(Windowsize, Windowsize);
@@ -114,7 +141,7 @@ int main(int argc, char** argv){
  
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
  
-    glutDisplayFunc(display);
+	glutDisplayFunc(display);
     glutTimerFunc(16, timertick, 0);
 	glutMotionFunc(mousedrug);
 	glutKeyboardFunc(keydown);
@@ -131,6 +158,7 @@ int main(int argc, char** argv){
     glutMainLoop();
 	
 	glDeleteTextures(1,&texture);
+	delete tex;
 
 	return 0;
 }
