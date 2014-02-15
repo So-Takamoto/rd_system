@@ -5,7 +5,6 @@
 #include <iomanip>
 #include "freeglut.h"
 #include "bitmapUtil.h"
-using std::vector;
 #pragma comment( lib, "freeglut.lib" )
 
 #include "rd_simulator.h"
@@ -13,25 +12,24 @@ using std::vector;
 const int Mapsize = 200;
 const int Windowsize = 600;
 rdmap rd(Mapsize);
-static float *tex;
-static int tickCount = 0;
-char windowPixels[3*Windowsize*Windowsize];
+//char windowPixels[3*Windowsize*Windowsize];
 
 void timertick(int value)
 {
+	static int tickCount = 0;
 	for(int i = 0; i < 30; i++){
 		rd.move();
 	}
     glutPostRedisplay();
     glutTimerFunc(16, timertick, 0);
-	std::stringstream ss;
+	//std::stringstream ss;
 	//glReadPixels(0, 0, Windowsize, Windowsize, GL_BGR_EXT, GL_UNSIGNED_BYTE, windowPixels);
 	//ss << "bmp/case2/case_" << std::setw(10) << std::setfill('0') << tickCount << ".bmp";
 	//saveBMP(ss.str(), Mapsize, Mapsize, windowPixels);
 	tickCount++;
 }
 
-void mousedrug(int x, int y){
+void mousedrag(int x, int y){
 	rd.point_delete(x*Mapsize/Windowsize, y*Mapsize/Windowsize, 20*Mapsize/Windowsize);
 }
 
@@ -95,27 +93,23 @@ void display_params(){
 
 void display(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	static std::vector<float> tex(Mapsize*Mapsize*3);
 
-	float* rd_v = *(rd.get_v());
-	float* tex_current = tex;
-	float* rd_v_current = rd_v;
 	const float texture_mul = 2.0;
+	double** rd_v = rd.get_v();
 	for(int i = 0; i < Mapsize; i++){
 		for(int j = 0; j < Mapsize; j++){
-			*tex_current = 0.0;
-			tex_current++;
-			*tex_current = std::min(texture_mul*(*rd_v_current), 1.0f);
-			tex_current++;
-			*tex_current = std::min(texture_mul*(*rd_v_current), 1.0f);
-			tex_current++;
-			rd_v_current++;
+			const float fcolor = static_cast<float>(std::min(texture_mul*(rd_v[i][j]), 1.0));
+			tex[(i*Mapsize+j)*3] = 0.0;
+			tex[(i*Mapsize+j)*3+1] = fcolor;
+			tex[(i*Mapsize+j)*3+2] = fcolor;
 		}
 	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Mapsize, Mapsize, 0, GL_RGB, GL_FLOAT, &(tex[0]));
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Mapsize, Mapsize, 0, GL_RGB, GL_FLOAT, tex);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glLoadIdentity();
+
 
 	glColor3f(1.0,1.0,1.0);
 	glBegin(GL_POLYGON);
@@ -129,36 +123,44 @@ void display(void)
 
 	glutSwapBuffers();
 }
-int main(int argc, char** argv){
-	tex = static_cast<float*>(malloc(Mapsize*Mapsize*3*sizeof(float)));
 
-    glutInitWindowPosition(100, 100);
-	glutInitWindowSize(Windowsize, Windowsize);
- 
-    glutInit(&argc, argv);
- 
-    glutCreateWindow("Reaction-Diffusion System");
- 
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
- 
-	glutDisplayFunc(display);
-    glutTimerFunc(16, timertick, 0);
-	glutMotionFunc(mousedrug);
-	glutKeyboardFunc(keydown);
-
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-
- 	glEnable(GL_TEXTURE_2D);
+class glutManager{
+private:
 	GLuint texture;
-	glGenTextures(1,&texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+public:
+	~glutManager(){
+		glDeleteTextures(1,&texture);
+	}
+	void startMainLoop(int argc, char** argv){
+		glutInitWindowPosition(100, 100);
+		glutInitWindowSize(Windowsize, Windowsize);
+ 
+		glutInit(&argc, argv);
+ 
+		glutCreateWindow("Reaction-Diffusion System");
+ 
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+ 
+		glutDisplayFunc(display);
+		glutTimerFunc(16, timertick, 0);
+		glutMotionFunc(mousedrag);
+		glutKeyboardFunc(keydown);
 
-    glutMainLoop();
+		glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+
+ 		glEnable(GL_TEXTURE_2D);
+		glGenTextures(1,&texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glMatrixMode(GL_MODELVIEW);
+		glutMainLoop();
+	}
+};
+
+int main(int argc, char** argv){
+	glutManager glutm;
+	glutm.startMainLoop(argc, argv);
 	
-	glDeleteTextures(1,&texture);
-	delete tex;
-
 	return 0;
 }

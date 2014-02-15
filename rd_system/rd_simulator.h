@@ -1,59 +1,40 @@
 #include <cmath>
+#include <utility>
+#include <memory>
 
 class rdmap{
 private:
 	int mapsize;
 	float f, k;
 	float ru, rv;
-	float **u, **u_next;
-	float **v, **v_next;
+	std::unique_ptr<double[]> uData, vData, u_nextData, v_nextData;	
+	std::unique_ptr<double*[]> u, v, u_next, v_next;
 public:
-	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03f), k(0.056f), ru(0.09f), rv(0.056f){
-		u = static_cast<float**>(malloc(sizeof(float*)*mapsize));
-		v = static_cast<float**>(malloc(sizeof(float*)*mapsize));
-		u[0] = static_cast<float*>(malloc(sizeof(float)*mapsize*mapsize));
-		v[0] = static_cast<float*>(malloc(sizeof(float)*mapsize*mapsize));
-		u_next = static_cast<float**>(malloc(sizeof(float*)*mapsize));
-		v_next = static_cast<float**>(malloc(sizeof(float*)*mapsize));
-		u_next[0] = static_cast<float*>(malloc(sizeof(float)*mapsize*mapsize));
-		v_next[0] = static_cast<float*>(malloc(sizeof(float)*mapsize*mapsize));
-		for(int i = 1; i < mapsize; i++){
-			u[i] = u[i-1] + mapsize;
-			v[i] = v[i-1] + mapsize;
-			u_next[i] = u_next[i-1] + mapsize;
-			v_next[i] = v_next[i-1] + mapsize;
+	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03f), k(0.056f), ru(0.09f), rv(0.056f),
+		u(new double*[mapsize]), v(new double*[mapsize]), u_next(new double*[mapsize]), v_next(new double*[mapsize]),
+		uData(new double[mapsize*mapsize]), vData(new double[mapsize*mapsize]), u_nextData(new double[mapsize*mapsize]), v_nextData(new double[mapsize*mapsize])
+	{
+		for(int i = 0; i < mapsize; i++){
+			u[i] = uData.get()+i*mapsize;
+			v[i] = vData.get()+i*mapsize;
+			u_next[i] = u_nextData.get()+i*mapsize;
+			v_next[i] = v_nextData.get()+i*mapsize;
 		}
 		map_reset();
 	}
-	~rdmap(){
-		delete u[0];
-		delete v[0];
-		delete u;
-		delete v;
-
-		delete u_next[0];
-		delete v_next[0];
-		delete u_next;
-		delete v_next;
-
-	}
+	~rdmap(){}
 
 	void map_reset(){
 		for(int i = 0; i < mapsize; i++){
 			for(int j = 0; j < mapsize; j++){
-				u[i][j] = 0.0;
+				u[i][j] = 0.9;
 				v[i][j] = 0.0;
-				u_next[i][j] = 0.0;
+				u_next[i][j] = 0.9;
 				v_next[i][j] = 0.0;
 			}
 		}
 
-		for(int i = 1; i < mapsize-1; i++){
-			for(int j = 1; j < mapsize-1; j++){
-				u[i][j] = 0.9;
-			}
-		}
-		const float init_param = 0.3;
+		const double init_param = 0.3;
 		for(int i = 100; i < 140; i++){
 			for(int j = 50; j < 80; j++){
 				u[i][j] = 1.0;
@@ -79,8 +60,8 @@ public:
 	void move(){
 		for(int i = 1; i < mapsize-1; i++){
 			for(int j = 1; j < mapsize-1; j++){
-				u_next[i][j] = static_cast<float>(u[i][j] + 1.0 * (ru * ((u[i][j-1] - 2*u[i][j] + u[i][j+1]) + (u[i-1][j] - 2*u[i][j] + u[i+1][j])) - u[i][j]*v[i][j]*v[i][j] + f*(1-u[i][j])));
-				v_next[i][j] = static_cast<float>(v[i][j] + 1.0 * (rv * ((v[i][j-1] - 2*v[i][j] + v[i][j+1]) + (v[i-1][j] - 2*v[i][j] + v[i+1][j])) + u[i][j]*v[i][j]*v[i][j] - (f+k)*v[i][j]));
+				u_next[i][j] = u[i][j] + 1.0 * (ru * ((u[i][j-1] - 2*u[i][j] + u[i][j+1]) + (u[i-1][j] - 2*u[i][j] + u[i+1][j])) - u[i][j]*v[i][j]*v[i][j] + f*(1-u[i][j]));
+				v_next[i][j] = v[i][j] + 1.0 * (rv * ((v[i][j-1] - 2*v[i][j] + v[i][j+1]) + (v[i-1][j] - 2*v[i][j] + v[i+1][j])) + u[i][j]*v[i][j]*v[i][j] - (f+k)*v[i][j]);
 			}
 		}
 
@@ -105,13 +86,8 @@ public:
 				v_next[mapsize-1][i] = 0;
 		}
 
-		float** tmp;
-		tmp = u;
-		u = u_next;
-		u_next = tmp;
-		tmp = v;
-		v = v_next;
-		v_next = tmp;
+		std::swap(u, u_next);
+		std::swap(v, v_next);
 	}
 
 	void set_f(float _f){f = _f;}
@@ -122,7 +98,7 @@ public:
 	float get_k(){return k;}
 	float get_ru(){return ru;}
 	float get_rv(){return rv;}
-	float** get_v(){
-		return v;
+	double** get_v(){
+		return v.get();
 	}
 };
