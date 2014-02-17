@@ -5,20 +5,17 @@
 class rdmap{
 private:
 	int mapsize;
-	float f, k;
-	float ru, rv;
-	std::unique_ptr<double[]> uData, vData, u_nextData, v_nextData;	
-	std::unique_ptr<double*[]> u, v, u_next, v_next;
+	double  f, k;
+	double ru, rv;
+	std::unique_ptr<std::unique_ptr<double[]>[] > u, v, u_next, v_next;
 public:
-	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03f), k(0.056f), ru(0.09f), rv(0.056f),
-		u(new double*[mapsize]), v(new double*[mapsize]), u_next(new double*[mapsize]), v_next(new double*[mapsize]),
-		uData(new double[mapsize*mapsize]), vData(new double[mapsize*mapsize]), u_nextData(new double[mapsize*mapsize]), v_nextData(new double[mapsize*mapsize])
-	{
+	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03), k(0.056), ru(0.09), rv(0.056),
+		u(new std::unique_ptr<double[]>[mapsize]), v(new std::unique_ptr<double[]>[mapsize]), u_next(new std::unique_ptr<double[]>[mapsize]), v_next(new std::unique_ptr<double[]>[mapsize]){
 		for(int i = 0; i < mapsize; i++){
-			u[i] = uData.get()+i*mapsize;
-			v[i] = vData.get()+i*mapsize;
-			u_next[i] = u_nextData.get()+i*mapsize;
-			v_next[i] = v_nextData.get()+i*mapsize;
+			u[i].reset(new double[mapsize]);
+			v[i].reset(new double[mapsize]);
+			u_next[i].reset(new double[mapsize]);
+			v_next[i].reset(new double[mapsize]);
 		}
 		map_reset();
 	}
@@ -90,15 +87,15 @@ public:
 		std::swap(v, v_next);
 	}
 
-	void set_f(float _f){f = _f;}
-	void set_k(float _k){k = _k;}
-	void set_ru(float _ru){ru = _ru;}
-	void set_rv(float _rv){rv = _rv;}
-	float get_f(){return f;}
-	float get_k(){return k;}
-	float get_ru(){return ru;}
-	float get_rv(){return rv;}
-	double** get_v(){
-		return v.get();
+	void set_f(double _f){f = _f;}
+	void set_k(double _k){k = _k;}
+	void set_ru(double _ru){ru = _ru;}
+	void set_rv(double _rv){rv = _rv;}
+	double get_f(){return f;}
+	double get_k(){return k;}
+	double get_ru(){return ru;}
+	double get_rv(){return rv;}
+	const std::unique_ptr<std::unique_ptr<double[]>[] >& get_v_ref(){
+		return v;
 	}
 };

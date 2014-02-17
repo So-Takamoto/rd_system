@@ -39,28 +39,28 @@ void keydown(unsigned char key, int x, int y){
 		rd.map_reset();
 		break;
 	case '1':
-		rd.set_f(rd.get_f() + 0.001f);
+		rd.set_f(rd.get_f() + 0.001);
 		break;
 	case '2':
-		rd.set_f(rd.get_f() - 0.001f);
+		rd.set_f(rd.get_f() - 0.001);
 		break;
 	case 'q':
-		rd.set_k(rd.get_k() + 0.001f);
+		rd.set_k(rd.get_k() + 0.001);
 		break;
 	case 'w':
-		rd.set_k(rd.get_k() - 0.001f);
+		rd.set_k(rd.get_k() - 0.001);
 		break;
 	case 'a':
-		rd.set_ru(rd.get_ru() + 0.002f);
+		rd.set_ru(rd.get_ru() + 0.002);
 		break;
 	case 's':
-		rd.set_ru(rd.get_ru() - 0.002f);
+		rd.set_ru(rd.get_ru() - 0.002);
 		break;
 	case 'z':
-		rd.set_rv(rd.get_rv() + 0.002f);
+		rd.set_rv(rd.get_rv() + 0.002);
 		break;
 	case 'x':
-		rd.set_rv(rd.get_rv() - 0.002f);
+		rd.set_rv(rd.get_rv() - 0.002);
 		break;
 	}
 }
@@ -96,7 +96,7 @@ void display(void)
 	static std::vector<float> tex(Mapsize*Mapsize*3);
 
 	const float texture_mul = 2.0;
-	double** rd_v = rd.get_v();
+	const std::unique_ptr<std::unique_ptr<double[]>[] >& rd_v = rd.get_v_ref();
 	for(int i = 0; i < Mapsize; i++){
 		for(int j = 0; j < Mapsize; j++){
 			const float fcolor = static_cast<float>(std::min(texture_mul*(rd_v[i][j]), 1.0));
