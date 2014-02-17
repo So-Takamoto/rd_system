@@ -2,6 +2,8 @@
 #include <utility>
 #include <memory>
 
+const double f_init = 0.03, k_init = 0.056, ru_init = 0.09, rv_init = 0.056;
+
 class rdmap{
 private:
 	int mapsize;
@@ -9,7 +11,7 @@ private:
 	double ru, rv;
 	std::unique_ptr<std::unique_ptr<double[]>[] > u, v, u_next, v_next;
 public:
-	rdmap(int _mapsize) : mapsize(_mapsize), f(0.03), k(0.056), ru(0.09), rv(0.056),
+	rdmap(int _mapsize) : mapsize(_mapsize), f(f_init), k(k_init), ru(ru_init), rv(rv_init),
 		u(new std::unique_ptr<double[]>[mapsize]), v(new std::unique_ptr<double[]>[mapsize]), u_next(new std::unique_ptr<double[]>[mapsize]), v_next(new std::unique_ptr<double[]>[mapsize]){
 		for(int i = 0; i < mapsize; i++){
 			u[i].reset(new double[mapsize]);
